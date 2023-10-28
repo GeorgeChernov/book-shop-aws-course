@@ -76,6 +76,13 @@ functions:
           path: /products
           method: get
           cors: true
+  createProduct:
+    handler: handlers/createProduct.createProduct
+    events:
+      - http:
+          path: /products
+          method: post
+          cors: true
   getComments:
     handler: ./handlers/getComments.getComments
     events:
