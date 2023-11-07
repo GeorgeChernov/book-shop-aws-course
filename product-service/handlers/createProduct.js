@@ -6,34 +6,24 @@ AWS.config.setPromisesDependency(require("bluebird"));
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-module.exports.getProducts = async (event, context, callback) => {
-  var productsParams = {
+module.exports.createProduct = async (event, context, callback) => {
+  const id = context.awsRequestId;
+
+  var productParams = {
     TableName: "products",
     ProjectionExpression: "id, title, description, price",
+    Item: mapToProductItem(event, id)
   };
 
   var stocksParams = {
     TableName: "stocks",
     ProjectionExpression: "productId, itemCount",
+    Item: mapToStockItem(event, id)
   };
 
-  const products = await dynamoDb
-    .scan(productsParams)
-    .promise()
-    .then((data) => data.Items);
-  const stocks = await dynamoDb
-    .scan(stocksParams)
-    .promise()
-    .then((data) => data.Items);
-
-  let result = [];
-
-  for (let i = 0; i < products.length; i++) {
-    const stock = stocks.find((x) => x.productId === products[i].id);
-
-    result.push({ ...products[i], count: stock.itemCount });
-  }
-
+  await dynamoDb.put(productParams).promise();
+  await dynamoDb.put(stocksParams).promise();
+  
   return callback(null, {
     statusCode: 200,
     headers: {
@@ -41,6 +31,22 @@ module.exports.getProducts = async (event, context, callback) => {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
     },
-    body: JSON.stringify(result),
+    body: id,
   });
 };
+
+function mapToProductItem(event, id) {
+  return {
+    id,
+    title: event.title,
+    description: event.description,
+    price: event.price
+  };
+}
+
+function mapToStockItem(event, id) {
+  return {
+    productId: id,
+    itemCount: event.count
+  };
+}

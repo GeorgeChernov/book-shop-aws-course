@@ -25,6 +25,14 @@ provider:
   runtime: nodejs18.x
   stage: dev
   region: eu-west-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -64,15 +72,24 @@ functions:
   getProducts:
     handler: handlers/getProducts.getProducts
     events:
-      - httpApi:
+      - http:
           path: /products
           method: get
+          cors: true
+  createProduct:
+    handler: handlers/createProduct.createProduct
+    events:
+      - http:
+          path: /products
+          method: post
+          cors: true
   getComments:
     handler: ./handlers/getComments.getComments
     events:
-      - httpApi:
+      - http:
           path: /comments
           method: get
+          cors: true
           
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -115,13 +132,31 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+resources:
+  Resources:
+    products:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: products
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    stocks:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: stocks
+        AttributeDefinitions:
+          - AttributeName: productId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: productId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

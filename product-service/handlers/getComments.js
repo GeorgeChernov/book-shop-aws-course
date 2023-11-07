@@ -7,11 +7,13 @@ module.exports.getComments = async (event) => {
       [
         {
           id: '1',
-          title: 'The book is ok'
+          title: 'The book is ok',
+          productId: '1'
         }, 
         {
           id: '2',
-          title: 'The book sucks'
+          title: 'The book sucks',
+          productId: '2'
         }
       ]
     ),
